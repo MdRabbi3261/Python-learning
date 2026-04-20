@@ -1,0 +1,3 @@
+Total line: 5
+Total word: 27
+Total carecter: 86
