@@ -1,0 +1,175 @@
+% ============================================================
+%  LabWatch Thesis — Chapter 4: Results and Analysis
+% ============================================================
+% \chapter{Results}
+
+% ============================================================
+\chapter{Results and Analysis}
+\label{ch-results}
+\label{ch:results}
+% ============================================================
+
+This chapter presents the quantitative results of the eight experimental training runs conducted as part of the LabWatch comparative evaluation. Results are organised to progressively build understanding: beginning with an overall performance summary across all configurations, then proceeding to detailed analyses of individual metrics including mAP@50, mAP@50--95, precision, recall, F1-score, training dynamics, and model convergence behaviour. All figures presented in this chapter were generated from the validation metrics logged during training; all quantitative claims are directly traceable to the data recorded in the best-checkpoint metrics file.
+
+% ------------------------------------------------------------
+\section{Summary of Best-Checkpoint Results}
+% ------------------------------------------------------------
+
+Table~\ref{tab:best_checkpoint} presents the complete set of best-checkpoint validation metrics for all eight experimental configurations. Each row corresponds to one training run, identified by the YOLO architecture and the initial learning rate. The best-checkpoint epoch is the epoch at which the highest mAP@50 was recorded on the validation set; all metrics reported in the table correspond to that checkpoint. The model achieving the globally highest mAP@50 is highlighted.
+
+\begin{table}[ht]
+  \centering
+  \caption{Best-checkpoint validation metrics for all eight experimental configurations. The globally best result (YOLOv12, lr$=1\times10^{-3}$) is highlighted.}
+  \label{tab:best_checkpoint}
+  \renewcommand{\arraystretch}{1.3}
+  \begin{tabular}{lccccccc}
+    \toprule
+    \textbf{Experiment} & \textbf{Best Ep.} & \textbf{Prec.} & \textbf{Recall} & \textbf{F1} & \textbf{mAP@50} & \textbf{mAP@50-95} & \textbf{Time (s)} \\
+    \midrule
+    YOLOv8  lr$=1\times10^{-4}$  & 120 & 0.738 & 0.563 & 0.639 & 0.555 & 0.223 & 1721.6 \\
+    YOLOv8  lr$=1\times10^{-3}$  & 90  & 0.761 & 0.564 & 0.648 & 0.580 & 0.235 & 1344.0 \\
+    YOLOv11 lr$=1\times10^{-4}$  & 102 & 0.745 & 0.594 & 0.661 & 0.575 & 0.237 & 1423.3 \\
+    YOLOv11 lr$=1\times10^{-3}$  & 97  & 0.568 & 0.567 & 0.568 & 0.579 & 0.231 & 1393.5 \\
+    YOLOv12 lr$=1\times10^{-4}$  & 96  & 0.758 & 0.585 & 0.661 & 0.570 & 0.229 & 1813.8 \\
+    \rowcolor{goldrow}
+    \textbf{YOLOv12 lr$=1\times10^{-3}$} & \textbf{88} & \textbf{0.764} & \textbf{0.568} & \textbf{0.652} & \textbf{0.672} & \textbf{0.259} & \textbf{1734.0} \\
+    YOLOv26 lr$=1\times10^{-4}$  & 151 & 0.503 & 0.531 & 0.517 & 0.524 & 0.205 & 2696.5 \\
+    YOLOv26 lr$=1\times10^{-3}$  & 79  & 0.737 & 0.518 & 0.609 & 0.535 & 0.211 & 1417.2 \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+The outcome immediately produces a performance ranking. The best model in this comparison is YOLOv12 trained using an initial learning rate of $1\times10^{-3}$, with a highest mAP@50, mAP@50-95 and precision ($$mAP@50, mAP@50-95 and precision) of 0.672, 0.259 and 0.764, respectively. Interestingly, it also takes the smallest number of epochs (epoch 88) to converge to its best checkpoint, implying that the area-based attention mechanism helps the pretrained weights to adapt the features more quickly to the specific surveillance domain. On the other hand, the network trained with $1\times10^{-4}$ learning rate (YOLOv26 model) performs the poorest across most metrics, and takes the longest time to be stopped early (epoch 151) suggesting its non-convergence within the training budget of 150 epochs.
+
+% ------------------------------------------------------------
+\section{mAP@50 Comparison}
+% ------------------------------------------------------------
+
+\subsection{Best mAP@50 by Model and Learning Rate}
+
+Figure~\ref{fig:map50_bar} shows a grouped bar chart of the best mAP@50 across the models for both learning rates (LR). The bar chart shows consistent trends: three of the four YOLO models (YOLOv8, YOLOv12 and YOLOv26) attain significantly higher best mAP@50 with the higher learning rate (lr$=1\times10^{-3}$) compared to the lower learning rate (lr$=1\times10^{-4}$). The only exception is with YOLOv11 where we observe two peaks around the same value (best mAP@50 values of 0.575 and 0.579 for lr$=1\times10^{-4}$ and lr$=1\times10^{-3}$ respectively); this observation will be explored in Chapter~5.
+\begin{figure}[ht]
+  \centering
+  \includegraphics[width=\linewidth]{figures/map50_best.png}
+  \caption{Best mAP@50 comparison across all four YOLO architectures and two learning rates. YOLOv12 at lr$=1\times10^{-3}$ achieves the highest value (0.672), indicated by the tallest dark bar.}
+  \label{fig:map50_bar}
+\end{figure}
+The difference in performance between the YOLOv12 (lr$=1\times10^{-3}$, mAP@50$=0.672$) detector and the second place (YOLOv8 lr$=1\times10^{-3}$, mAP@50$=0.580$) amounts to 9.2 percentage points, which is quite significant in the context of object detection on a domain-specific problem. The difference between YOLOv12 (lr$=1\times10^{-3}$) and the worst performing configuration (YOLOv26, lr$=1\times10^{-4}$, mAP@50$=0.524$) is 14.8 percentage points, further highlighting the importance of both model design and learning rate in object detection performance.
+
+% ------------------------------------------------------------
+\section{mAP@50--95 Comparison}
+% ------------------------------------------------------------
+Figure~\ref{fig:map5095_bar} presents the mAP@50--95 comparison across all configurations. This stricter metric penalises imprecise bounding-box localisation and thus provides a more demanding assessment of detection quality. The ordering of configurations mirrors that observed for mAP@50, with YOLOv12 (lr$=1\times10^{-3}$) leading at 0.259, followed by YOLOv11 (lr$=1\times10^{-4}$) at 0.237 and YOLOv8 (lr$=1\times10^{-3}$) at 0.235.
+
+\begin{figure}[ht]
+  \centering
+  \includegraphics[width=\linewidth]{figures/map5095_best.png}
+  \caption{Best mAP@50--95 comparison across all models and learning rates. The metric is consistently lower than mAP@50 across all configurations, reflecting the additional difficulty of precise bounding-box localisation in an overhead surveillance setting.}
+  \label{fig:map5095_bar}
+\end{figure}
+
+The absolute mAP@50--95 values range from 0.205 (YOLOv26, lr$=1\times10^{-4}$) to 0.259 (YOLOv12, lr$=1\times10^{-3}$), clustering in a relatively narrow band of 0.20--0.26. This tight clustering, contrasted with the wider spread observed in mAP@50 (0.52--0.67), suggests that while models differ in their ability to detect students at the lenient 0.50 IoU threshold, their capacity for precise localisation is more uniformly limited across architectures. This is a characteristic finding in overhead surveillance research and can be attributed to the foreshortening distortion inherent to the top-down perspective, which compresses the apparent size of bounding boxes and makes tight localisation inherently more challenging.
+
+% ------------------------------------------------------------
+\section{Best vs.\ Last Checkpoint mAP@50}
+% ------------------------------------------------------------
+
+The gap between the best-checkpoint mAP@50 and the last-checkpoint mAP@50 provides a direct measure of training instability or post-peak performance degradation after early stopping. Figure~\ref{fig:best_last} presents this comparison for all eight configurations as a paired bar chart.
+
+\begin{figure}[ht]
+  \centering
+  \includegraphics[width=\linewidth]{figures/best_vs_last.png}
+  \caption{Comparison of best-checkpoint (blue) and last-checkpoint (orange) mAP@50 for each experimental configuration. A large gap between bars indicates post-peak performance drift following the best epoch.}
+  \label{fig:best_last}
+\end{figure}
+
+Across most configurations, the gap between best and last mAP@50 is modest, ranging from approximately 0.01 to 0.11 percentage points. The largest absolute gap is observed for YOLOv12 (lr$=1\times10^{-3}$), where the best mAP@50 of 0.672 (recorded at epoch 88) declines to approximately 0.560 by the final training epoch---a drop of 11.2 percentage points. This pattern is consistent with a brief performance spike driven by a particularly favourable weight configuration during the cosine annealing descent, after which the learning rate continues to decrease and the model refines away from this configuration. The early stopping mechanism correctly identified this peak and preserved the corresponding weights.
+
+YOLOv26 (lr$=1\times10^{-4}$) and YOLOv26 (lr$=1\times10^{-3}$) both exhibit relatively small best-to-last gaps (approximately 2--3 percentage points), suggesting that although YOLOv26 achieves lower absolute performance, its training trajectory is comparatively stable. YOLOv8 and YOLOv11 configurations cluster between these extremes, with gaps in the range of 2--4 percentage points, indicating consistent and stable convergence behaviour.
+
+% ------------------------------------------------------------
+\section{mAP@50 Heatmap Analysis}
+% ------------------------------------------------------------
+
+Figure~\ref{fig:heatmap} presents a heatmap of the best mAP@50 values across the two-dimensional grid defined by model architecture ($y$-axis) and initial learning rate ($x$-axis). The colour scale ranges from dark purple (lowest mAP@50 $\approx$ 0.52) through teal (mid-range $\approx$ 0.57--0.58) to bright yellow (highest mAP@50 $\approx$ 0.67), providing an immediate visual summary of the model--LR interaction.
+
+\begin{figure}[ht]
+  \centering
+  \includegraphics[width=0.75\linewidth]{figures/heatmap.png}
+  \caption{Heatmap of best mAP@50 values across all model--learning rate combinations. The bright yellow cell (YOLOv12, lr$=0.001$) indicates the globally optimal configuration, while the dark purple cells (YOLOv26 at both rates) highlight the weakest performer.}
+  \label{fig:heatmap}
+\end{figure}
+
+The heatmap reveals several structurally important insights. First, the YOLOv12 row exhibits the greatest sensitivity to learning rate among all architectures: the difference between its lr$=0.001$ cell (0.67) and its lr$=0.0001$ cell (0.57) is 0.10 mAP@50 units, the largest model-wise learning-rate sensitivity observed. This suggests that YOLOv12's area-based attention mechanism benefits disproportionately from a larger initial gradient magnitude to rapidly specialise its attention patterns during early training epochs. Second, YOLOv8 and YOLOv11 exhibit similar and relatively modest learning-rate sensitivity (differences of 0.03 and 0.00 respectively), indicating that these architectures generalise reliably across both learning rates. Third, YOLOv26 occupies the darkest cells across both rates, confirming that it is the weakest performer on this dataset regardless of learning rate.
+
+% ------------------------------------------------------------
+\section{Precision and Recall Analysis}
+\label{sec:prec_recall}
+% ------------------------------------------------------------
+
+Figure~\ref{fig:prec_recall} presents side-by-side bar charts for precision (left panel) and recall (right panel) at the best checkpoint for each model--LR configuration.
+
+\begin{figure}[ht]
+  \centering
+  \includegraphics[width=\linewidth]{figures/precision_recall.png}
+  \caption{Precision (left) and Recall (right) at the best checkpoint across all four models and two learning rates. Higher bars indicate better performance in each metric.}
+  \label{fig:prec_recall}
+\end{figure}
+
+Precision values for the majority of configurations cluster in a relatively narrow band between 0.74 and 0.76, indicating that when any of these models makes a detection prediction, it is correct approximately three-quarters of the time. Two notable outliers disrupt this pattern: YOLOv11 (lr$=1\times10^{-3}$) records a precision of only 0.568, and YOLOv26 (lr$=1\times10^{-4}$) records a precision of only 0.503. For YOLOv11 (lr$=1\times10^{-3}$), the reduced precision may reflect a transient instability at the higher learning rate: the attention mechanism may overshoot during certain training phases, producing an excess of false positive detections that are not fully corrected before early stopping is triggered. For YOLOv26 (lr$=1\times10^{-4}$), the low precision aligns with the model's generally poor convergence at this learning rate.
+
+Recall values are more tightly clustered across all configurations, spanning the range 0.518 to 0.594. This narrow spread suggests that the models are similarly conservative in their detection behaviour: all configurations miss approximately 40--48\% of ground-truth student instances at the optimal confidence threshold. The consistently lower recall relative to precision implies that the models tend to make fewer but more reliable predictions---a behaviour that may be acceptable in laboratory monitoring applications where missed detections (false negatives) are less operationally costly than false alarms (false positives) that might unnecessarily flag innocent student behaviour as suspicious.
+
+% ------------------------------------------------------------
+\section{F1-Score Analysis}
+% ------------------------------------------------------------
+
+The F1-score integrates precision and recall into a single balanced metric. Figure~\ref{fig:f1} presents the F1-score comparison across all configurations, grouped by model and coloured by learning rate.
+
+\begin{figure}[ht]
+  \centering
+  \includegraphics[width=\linewidth]{figures/f1_score.png}
+  \caption{F1-score comparison across all four YOLO models under both learning rate conditions. YOLOv12 (lr$=1\times10^{-3}$) and YOLOv11 (lr$=1\times10^{-4}$) jointly achieve the highest F1 of approximately 0.66.}
+  \label{fig:f1}
+\end{figure}
+
+The F1-score chart reveals that YOLOv12 (lr$=1\times10^{-3}$) and YOLOv11 (lr$=1\times10^{-4}$) achieve the joint highest F1-score of approximately 0.661--0.662, closely followed by YOLOv8 (lr$=1\times10^{-3}$) at approximately 0.648. It is noteworthy that YOLOv11 (lr$=1\times10^{-4}$) achieves a competitive F1-score despite its mAP@50 (0.575) being lower than that of YOLOv12 (lr$=1\times10^{-3}$, mAP@50$=0.672$). This discrepancy arises because F1-score is evaluated at a fixed confidence threshold, whereas mAP@50 integrates performance across all thresholds: YOLOv11 (lr$=1\times10^{-4}$) achieves a particularly favourable precision--recall balance at a specific threshold, yielding a high F1, while YOLOv12's superior mAP@50 reflects its consistently strong performance across the full range of confidence thresholds.
+
+YOLOv26 (lr$=1\times10^{-4}$) records the lowest F1-score of 0.517, consistent with its poor precision (0.503) at the best-checkpoint threshold. YOLOv11 (lr$=1\times10^{-3}$) also underperforms in F1 (0.568) relative to its mAP@50 (0.579), reflecting the precision degradation discussed in Section~\ref{sec:prec_recall} (Section~4.6).
+
+% ------------------------------------------------------------
+\section{Training Loss Dynamics}
+% ------------------------------------------------------------
+
+Figure~\ref{fig:train_loss} presents the training loss curves for all eight experiments over the course of their respective training runs. The training loss displayed is the composite total loss comprising the weighted sum of bounding-box regression loss, classification loss, and distribution focal loss (DFL).
+
+\begin{figure}[ht]
+  \centering
+  \includegraphics[width=\linewidth]{figures/loss_curve.png}
+  \caption{Training loss curves for all eight experiments over epochs 1--160. All curves exhibit a characteristic sharp spike in the first 1--3 epochs followed by rapid descent toward a stable minimum.}
+  \label{fig:train_loss}
+\end{figure}
+
+All eight loss curves share a characteristic shape: a sharp spike in the first one to three epochs, followed by a rapid descent phase spanning approximately epochs 3--40, and then a prolonged gradual refinement phase from epoch 40 onward. The initial spike is a well-documented artefact of mosaic augmentation: at the start of training, when the model weights are still close to their pretrained COCO initialisation, the composite mosaic images present a radically different input distribution compared to the single-object COCO training images on which the backbone was pretrained. This distribution mismatch produces temporarily inflated loss values that resolve rapidly as the model adapts to the mosaic augmentation pattern.
+
+A notable observation is that the \texttt{yolo8\_cosine\_lr0.001} configuration (grey curve) achieves the lowest final training loss, converging to approximately 1.60 by epoch 160. However, this model does not achieve the highest mAP@50 (0.580 versus YOLOv12's 0.672), illustrating that training loss and validation detection quality are not perfectly correlated metrics: a lower training loss indicates better fit to the training data, but this does not necessarily translate to improved generalisation on the held-out validation set.
+
+The \texttt{yolo26\_cosine\_lr0.0001} configuration (purple curve) converges most slowly among all experiments, remaining above 1.85 through epoch 80 before gradually descending to approximately 1.77. This slow convergence rate is consistent with the model's late best-checkpoint epoch (epoch 151) and supports the interpretation that the $1\times10^{-4}$ learning rate is insufficient to efficiently optimise YOLOv26's higher-capacity architecture within the allowed training budget.
+
+% ------------------------------------------------------------
+\section{Validation mAP@50 Learning Curves}
+% ------------------------------------------------------------
+
+Figure~\ref{fig:val_map50} presents the validation mAP@50 trajectories over training epochs for all eight configurations. This figure provides insight into the speed of convergence and the stability of validation performance over time.
+
+\begin{figure}[ht]
+  \centering
+  \includegraphics[width=\linewidth]{figures/map_curve.png}
+  \caption{Validation mAP@50 over training epochs for all eight experimental configurations. The \texttt{yolo12\_cosine\_lr0.001} curve (red) achieves the global peak near epoch 88 before declining, while most other configurations reach a plateau between epochs 50 and 80.}
+  \label{fig:val_map50}
+\end{figure}
+
+The mAP@50 curves for the majority of configurations follow a characteristic growth pattern: rapid improvement during epochs 1--40, a transition into a slower growth phase from epochs 40--60, and approximate plateau behaviour from epoch 60 onward. The notable exception is the \texttt{yolo26\_cosine\_lr0.0001} curve (purple), which ascends much more slowly, only approaching its plateau value near epoch 100. This significantly delayed convergence behaviour indicates that YOLOv26's deeper architecture requires more gradient updates to adapt its higher-capacity representations to the surveillance domain, and the low learning rate of $1\times10^{-4}$ slows this process further.
+
+The most striking feature of the mAP@50 curve plots is the transient spike exhibited by the \texttt{yolo12\_cosine\_lr0.001} configuration (red curve) near epoch 88, where the validation mAP@50 reaches approximately 0.672 before declining to the 0.55--0.57 range in subsequent epochs. This spike corresponds to the best checkpoint recorded for this experiment and is captured by the early stopping mechanism before further degradation can occur. The brief nature of this peak suggests that the model's attention mechanism briefly reaches an exceptionally well-calibrated configuration during the cosine annealing descent before the learning rate decreases sufficiently to allow the weights to consolidate in this region.
+
+Most configurations reach their best mAP@50 values within 100 epochs, well before the maximum of 250 epochs, confirming that the early stopping criterion (patience $=$ 30 epochs) was appropriately calibrated. Training beyond the best checkpoint consistently shows either plateau or mild decline behaviour, with no configuration demonstrating meaningful late-stage improvement. This observation supports the use of early stopping in future LabWatch training runs to reduce computational cost without sacrificing detection quality.
